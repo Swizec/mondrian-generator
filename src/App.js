@@ -3,6 +3,7 @@ import * as d3 from "d3";
 
 import "./App.css";
 import Mondrian from "./Mondrian";
+import useMondrianGenerator from "./useMondrianGenerator";
 
 const Range = ({ name, value, onChange }) => {
     return (
@@ -22,67 +23,24 @@ const Range = ({ name, value, onChange }) => {
     );
 };
 
-// Create weighted probability distribution to pick a random color for a square
-const createColor = ({ redRatio, blueRatio, yellowRatio, blackRatio }) => {
-    const probabilitySpace = [
-        ...new Array(redRatio * 10).fill("red"),
-        ...new Array(blueRatio * 10).fill("blue"),
-        ...new Array(yellowRatio * 10).fill("yellow"),
-        ...new Array(blackRatio * 10).fill("black"),
-        ...new Array(
-            redRatio * 10 + blueRatio * 10 + yellowRatio * 10 + blackRatio * 10
-        ).fill("#fffaf1")
-    ];
-
-    return d3.shuffle(probabilitySpace)[0];
-};
-
 function App() {
-    const [redRatio, setRedRatio] = useState(0.3);
-    const [yellowRatio, setYellowRatio] = useState(0.3);
-    const [blueRatio, setBlueRatio] = useState(0.3);
-    const [blackRatio, setBlackRatio] = useState(0.3);
+    const [redRatio, setRedRatio] = useState(0.2);
+    const [yellowRatio, setYellowRatio] = useState(0.4);
+    const [blueRatio, setBlueRatio] = useState(0.1);
+    const [blackRatio, setBlackRatio] = useState(0.1);
+    const [width, setWidth] = useState(600);
+    const [height, setHeight] = useState(400);
+    const [subdivisions, setSubdivisions] = useState(0.5);
+    const [maxDepth, setMaxDepth] = useState(0.4);
 
-    let mondrian = useMemo(() => {
-        const generateMondrian = ({ value, depth = 0 }) => {
-            const N = Math.round(Math.random() * 7);
-
-            return {
-                value,
-                color: createColor({
-                    redRatio,
-                    yellowRatio,
-                    blueRatio,
-                    blackRatio
-                }),
-                children:
-                    depth < 2
-                        ? d3.range(N).map(_ =>
-                              generateMondrian({
-                                  value: value / N,
-                                  depth: depth + 1
-                              })
-                          )
-                        : null
-            };
-        };
-
-        return generateMondrian({ value: 100 });
-    }, []);
-
-    // Recalculate node colors on every render
-    const updateColors = node => ({
-        ...node,
-        color: createColor({
-            redRatio,
-            yellowRatio,
-            blueRatio,
-            blackRatio
-        }),
-        children: node.children ? node.children.map(updateColors) : null
+    let mondrian = useMondrianGenerator({
+        redRatio,
+        yellowRatio,
+        blueRatio,
+        blackRatio,
+        subdivisions,
+        maxDepth
     });
-
-    mondrian = updateColors(mondrian);
 
     return (
         <div className="App">
@@ -106,14 +64,38 @@ function App() {
                         value={blackRatio}
                         onChange={setBlackRatio}
                     />
+                    <Range
+                        name="subdivisions"
+                        value={subdivisions}
+                        onChange={setSubdivisions}
+                    />
+                    <Range
+                        name="maxDepth"
+                        value={maxDepth}
+                        onChange={setMaxDepth}
+                    />
+                </div>
+                <div>
+                    <label>Width: </label>
+                    <input
+                        type="number"
+                        value={width}
+                        onChange={event => setWidth(event.target.value)}
+                    />
+                    <label>Height: </label>
+                    <input
+                        type="number"
+                        value={height}
+                        onChange={event => setHeight(event.target.value)}
+                    />
                 </div>
             </header>
-            <svg width="100%" height="100%">
+            <svg width={width} height="100%" style={{ margin: "0 auto" }}>
                 <Mondrian
-                    x={100}
-                    y={10}
-                    width={600}
-                    height={400}
+                    x={0}
+                    y={20}
+                    width={width}
+                    height={height}
                     data={mondrian}
                 />
             </svg>
