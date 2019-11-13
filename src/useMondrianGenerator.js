@@ -72,7 +72,8 @@ function useMondrianGenerator({
         yellowRatio,
         blueRatio,
         blackRatio,
-        mondrian
+        subdivisions,
+        maxDepth
     ]);
 
     return mondrian;
